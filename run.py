@@ -29,19 +29,36 @@ def main():
     question = question_list[0]     
 
     while life.game_continue(player.anx):
-        life.clear()                        # Clears console output
-        life.anxiety_meter(player.anx)      # Prints anxiety meter
-        out = life.format_output(question)  # Formats question for printing
-        life.sprint(out)                    # Types out question
+        life.clear()                          # Clears console output
+        life.anxiety_meter(player.anx)        # Prints anxiety meter
+        out = life.format_question(question)  # Formats question for printing
+        life.sprint(out)                      # Types out question
         
         # Gets response from user and gathers corresponding data 
         question_id, stats_index = life.get_answer(question.choices)
 
         # Updates player stats, returns new question_id if 'chance' returns True
-        question_id = life.update_player_stats(player, question.modifiers[stats_index], question_id)   
+        question_id = life.update_player_stats(player, question.modifiers[stats_index], question_id) 
+
+        # Prints any necessary story points for player
+        if 'text' in question.modifiers[stats_index]:
+            life.clear()
+            story_points = life.format_text(question.modifiers[stats_index]['text'])
+
+            # Prints each story point, waits three seconds before ending or moving to next point
+            for point in story_points:
+                # clear() and anxiety_meter() called for output stylization
+                life.clear()
+                life.anxiety_meter(player.anx)
+
+                # Prints story point
+                for strings in point:
+                    life.sprint(strings)
+                time.sleep(3)
+
         question = question_list[question_id]   # Sets index for next question
-    
-    
+
+        
 if __name__ == "__main__":
     main() 
     

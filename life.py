@@ -4,7 +4,7 @@ import time
 import random
 import textwrap
 
-class Question():
+class Question(): 
     '''
         A 'Question' is four parts,
         1. A Question ID as a unique identifier for easy reference.
@@ -20,7 +20,6 @@ class Question():
         self.question = question
         self.choices = choices
         self.modifiers = modifiers
-
 class Player():
     '''
         A 'Player' is four parts,
@@ -85,7 +84,7 @@ def clear():
     # Found on stackoverflow.com/questions/37071230
     os.system('cls')
    
-def format_output(input_question):
+def format_question(input_question):
     ''' 
         Creates string of Question in formatted output for
         the terminal
@@ -170,6 +169,40 @@ def format_output(input_question):
             
     return formatted_string         
 
+def format_text(input_list):
+    '''
+        Formats the input text and returns it as a list of strings for printing
+
+        Inputs:
+        input_list (list) - a list of strings to be formatted
+
+        Returns:
+        output_list (list) - the input list of strings, formatted and ready for printing
+    '''
+    output_list = []    # List to be returned
+    input_wrapper = textwrap.TextWrapper(width = 65) # Width 65 for input
+
+    # For every string in input_list...
+    for strings in input_list:
+        temp_list = []   # We create a list to store the formatted strings
+        output = input_wrapper.wrap(text=strings) # Format the strings
+        
+        # 'output' is going to return another list full of the formatted strings, so
+        # for every string in the list of formatted strings...
+
+        # append a new line, for formatting's sake
+        temp_list.append('\n')
+
+        for element in output:
+            to_append = '\t' + element + '\n'   # Add spacing to chunk of formatted string
+            temp_list.append(to_append)         # Append formatted string
+        
+        # The final temp_list is appended to output_list, constituting one full string
+        output_list.append(temp_list)           
+
+
+    return output_list    
+
 def sprint(fstring):
     '''
         'sprint' slowly prints to the console,
@@ -193,7 +226,11 @@ def update_player_stats(player, stats, question_id):
         to the Player class. If 'stats' is an empty dictionary, this function
         will evaluate this and pass by the conditional statements.
 
-        'question_id' (int)
+        Returns:        
+        'question_id' (int) - if a 'chance' attribute is included, the directed
+        question_id will be modified and the player will be directed to a
+        different outcome. Otherwise, the function will return the original 
+        question_id
 
         Notes:
         Because the 'anx' score is dependent on 'eat' and 'water' instance
@@ -212,10 +249,12 @@ def update_player_stats(player, stats, question_id):
 
     if 'chance' in stats:
         chance_variable = get_chance(stats['chance'])
-        question_id = 
+        question_id = (stats['outcome'] - 101)
 
     if ('anx' in stats) and (chance_variable == True):
-        player.adjust_anx(stats['anx'])       
+        player.adjust_anx(stats['anx'])   
+
+    return question_id        
 
 def anxiety_meter(anxiety):
     '''
@@ -404,11 +443,11 @@ def testing_printtest():
     print('Testing print formatter functionality')
     time.sleep(2)
     clear()
-    print_test = format_output(testquestion_fouroptions)
+    print_test = format_question(testquestion_fouroptions)
     sprint(print_test)
     print()
     clear()
-    print_test = format_output(testquestion_twooptions)
+    print_test = format_question(testquestion_twooptions)
     sprint(print_test)
     
 def test():
