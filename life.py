@@ -45,6 +45,22 @@ class Player():
             'value' (float) - value to adjust anx
         '''
         self.anx += value
+
+        # If player has eaten or had water, anxiety score
+        # is reduced by a max of 20% collectively
+        if self.eat == True:
+            self.anx -= 15.0
+
+        if self.water == True:
+            self.anx -= 5    
+
+        # Conditional to prevent value overflow
+        if self.anx > 100.0:
+            self.anx = 100.0
+
+        # Conditional to prevent value underflow
+        if self.anx < 0.0:
+            self.anx = 0.0    
     
     def adjust_eat(self, value):
         '''
@@ -73,9 +89,9 @@ def format_output(input_question):
     ''' 
         Creates string of Question in formatted output for
         the terminal
-        formatted_string += '\n'
+
         Inputs:
-        'input_question' (string) - Question class for formatting
+        'input_question' (class) - Question class for formatting
     
         Returns:
         'formatted_string' (string) - formatted string
@@ -152,9 +168,7 @@ def format_output(input_question):
         
         formatted_string += '\n'
             
-    return formatted_string      
-            
-    
+    return formatted_string         
 
 def sprint(fstring):
     '''
@@ -168,9 +182,158 @@ def sprint(fstring):
         sys.stdout.flush()          # 'flush()' sets next print to next char following .write()
         time.sleep(type_time)       # Waits 0.02s before typing next character
 
+def update_player_stats(player, stats, question_id):
+    '''
+        Updates player stats based on question response
+
+        Inputs:
+        'player' (class) - Player class to be updated
+
+        'stats' (dictonary) - a list of all modifiers, if any, to update
+        to the Player class. If 'stats' is an empty dictionary, this function
+        will evaluate this and pass by the conditional statements.
+
+        'question_id' (int)
+
+        Notes:
+        Because the 'anx' score is dependent on 'eat' and 'water' instance
+        variables, both 'eat' and 'water' are evauated before 'anx'
+
+        Optional attribute 'chance' is evaluated before 'anx' to determine whether
+        player continues to chance-directed story point
+    '''
+    chance_variable = True
+
+    if 'eat' in stats:
+        player.adjust_eat(stats['eat'])
+
+    if 'water' in stats:
+        player.adjust_water(stats['water']) 
+
+    if 'chance' in stats:
+        chance_variable = get_chance(stats['chance'])
+        question_id = 
+
+    if ('anx' in stats) and (chance_variable == True):
+        player.adjust_anx(stats['anx'])       
+
+def anxiety_meter(anxiety):
+    '''
+        Prints a running anxiety meter for the Player based on 
+        the Player.anx value. If Player.anx == 0.0, anxiety
+        meter will not be printed.
+
+        Inputs:
+        'anxiety' (float) - Player's current anxiety score
+    '''
+    if anxiety > 0.0:
+        level = (anxiety/100) * 65      # Calculates percentage of progress bar filled 
+        fill = ('█' * int(level))       # Calculates how many '█' characters to add
+        empty = ('░' * (65 - len(fill)))# Calculates how many '░' characters to add
+        bar = fill + empty          # Forms complete progress bar string
+        print('ANXIETY | ' + bar + ' | ' + str(anxiety) + '%')
+
+def game_continue(anxiety):
+    '''
+        Evaluates whether player has lost the game based on anxiety score
+
+        Inputs:
+        'anxiety' (float) - Player's current anxiety score
+
+        Returns:
+        'player_continue' (boolean) - T/F value whether player has lost the game
+        or not
+    '''
+    player_continue = True
+
+    if anxiety == 100.0:
+        player_continue = False
+
+    return player_continue    
+
+def get_answer(answers):
+    '''
+        Gets input from user response to the presented Question
+
+        Inputs:
+        'answers' (list) - a list of dictionaries containing the question ID's for the 
+        selected answer's corresponding follow-up question or prompt
+
+        Returns:
+        question_id (int) - the index to next question for following question corresponding 
+        to the player's response
+        index (int) - corresponding index in the instance the response
+        modifies player stats
+    '''
+    question_id = 0                 # Default value
+    index = 0                       # Index of response in input list
+
+    response = input('\tChoice: ')  # Gets input from user
+    response = response.lower()     # Converts answer to lowercase
+    answer = response[0]            # Gets index of first character
+
+    if len(answers) == 4:
+        while answer not in 'abcd':
+            # Cursor up one line, reprints and erases previous input prompt
+            # Found on stackoverflow.com/questions/5290994/remove-and-replace-printed-items
+            print('', end='\r')        
+            response = input('\tPlease input "a", "b", "c", or "d": ')    
+            response = response.lower()    
+            answer = response[0]
+
+        if answer == 'a':
+            question_id = answers[0]['ID']
+            index = 0
+        elif answer == 'b': 
+            question_id = answers[1]['ID']
+            index = 1
+        elif answer == 'c':
+            question_id = answers[2]['ID']
+            index = 2
+        elif answer == 'd':    
+            question_id = answers[3]['ID'] 
+            index = 3  
+
+    elif len(answers) == 2:
+        while answer not in 'ab':
+            print('', end='\r') 
+            response = input('\tPlease input "a" or "b": ')    
+            response = response.lower()    
+            answer = response[0]
+
+        if answer == 'a':
+            question_id = answers[0]['ID']
+            index = 0
+        elif answer == 'b':       
+            question_id = answers[1]['ID']
+            index = 1
+
+    # Returning question_id - 101 is equivalent to 
+    # the index of the evaluated question_id
+    return (question_id - 101), index        
+
+def get_chance(chance):
+    '''
+        Based on optional 'chance' dictionary entry, 
+
+        Inputs:
+        'chance' (float) - percent value of chance a story point is to occur
+
+        Returns:
+        'output' (boolean) - indicates wheter story point occurs or not based on 'gamble'
+    '''
+
+    output = True                       # Return variable default
+    gamble = random.uniform(0.01, 1.00) # Gets value to compare chance to 
+
+    if chance > gamble:
+        output = False
+    
+    return output
 
 
-testquestion_fouroptions = Question(
+def testing_printtest():
+    testquestion_fouroptions = Question(
         501, 
         'This is some filler text I\'m putting here to take up a decent amount ' \
         'of space, just in case we really want to develop the lore or something,' \
@@ -211,9 +374,8 @@ testquestion_fouroptions = Question(
                 'water': False
             }
         ]
-)
-
-testquestion_twooptions = Question(
+    )
+    testquestion_twooptions = Question(
         101, 
         'This is some filler text I\'m putting here to take up a decent amount ' \
         'of space, just in case we really want to develop the lore or something,' \
@@ -238,116 +400,9 @@ testquestion_twooptions = Question(
                 'water': True
             }
         ]
-) 
-
-question101 = Question(
-    101,
-    'Good morning! It\'s a beautiful day out, do you want to start your day off with some coffee?',
-    [
-        {
-            'ID': 102,
-            'Answer': 'Yes'
-        },
-        {
-            'ID': 108,
-            'Answer': 'No'
-        }
-    ],
-    [
-        {
-            'anx': 35
-        },
-        {}
-    ]
-)
-
-question102 = Question(
-    102,
-    'Oh jeez... That coffee really got you energized... too energized. You have way too much energy right now. What are you gonna funnel that energy into?',
-    [
-        {
-            'ID': 106,
-            'Answer': 'Clean your room'
-        },
-        {
-            'ID': 105,
-            'Answer': 'Get dressed'
-        },
-        {
-            'ID': 104,
-            'Answer': 'You remember that one topic you heard in passing a week and a half ago? Research as much as you can about it.'
-        },
-        {
-            'ID': 103,
-            'Answer': 'Just let your mind wander...'
-        }
-    ],
-    [
-        {
-            'chance': 0.5
-            'anx': 10
-        },
-        {
-            'anx': 10
-        },
-        {},
-        {
-            'anx': 15
-        }
-    ]
-)
-
-question103 = Question(
-    103,
-    'Uh oh... you\'ve entered a catastrophic thought loop. Choose what topic you want to dwell on until you spiral.',
-    [
-        {
-            'ID': 107,
-            'Answer': 'Every mistake you\'ve ever made'
-        },
-        {
-            'ID': 107,
-            'Answer': 'The planet is dying at an alarming rate'
-        },
-        {
-            'ID': 107,
-            'Answer': 'Your future and the endless possibilities it holds'
-        },
-        {
-            'ID': 107,
-            'Answer': 'Everyone hates you!'
-        }
-    ],
-    [{},{},{},{}]
-)
-
-question104 = Question(
-    104,
-    'fuckin whaling bro.... hooooly shit bro whaling',
-    [
-        {
-            'ID': 107,
-            'Answer': 'Every mistake you\'ve ever made'
-        },
-        {
-            'ID': 107,
-            'Answer': 'The planet is dying at an alarming rate'
-        },
-        {
-            'ID': 107,
-            'Answer': 'Your future and the endless possibilities it holds'
-        },
-        {
-            'ID': 107,
-            'Answer': 'Everyone hates you!'
-        }
-    ],
-    [{},{},{},{}]
-)
-
-
-def testing_printtest():
+    ) 
     print('Testing print formatter functionality')
+    time.sleep(2)
     clear()
     print_test = format_output(testquestion_fouroptions)
     sprint(print_test)
@@ -356,3 +411,8 @@ def testing_printtest():
     print_test = format_output(testquestion_twooptions)
     sprint(print_test)
     
+def test():
+    testing_printtest()
+
+if __name__ == "__main__":
+    test()    
