@@ -4,6 +4,102 @@ import time
 import random
 import textwrap
 
+SONG_LIST = [
+    {
+        'Title': 'Know Your Enemy',
+        'Artist': 'Rage Against the Machine',
+        'anx': -25.0,
+        'text': [
+            'This song was exactly what you needed, your anxiety score is lowered by 25%'
+        ]
+    },
+    {
+        'Title': 'Everywhere I Go',
+        'Artist': 'Hollywood Undead',
+        'anx': 5.0,
+        'text': [
+            'What a classic! A favorite song of yours. However, the tone is aggressive enough to cause your anxiety to rise by 5%.'
+        ]
+    },
+    {
+        'Title': 'Sparks',
+        'Artist': 'Coldplay',
+        'anx': 15.0,
+        'text': [
+            'This song makes you miss your partner... your anxiety score rises by 15%.'
+        ]
+    },
+    {
+        'Title': 'Birthday Cake',
+        'Artist': 'Slothrust',
+        'anx': -10.0,
+        'text': [
+            'Ding! This was the perfect song! Your anxiety lowers by 10%.'
+        ]
+    },
+    {
+        'Title': 'Haunted',
+        'Artist': 'Laura Les',
+        'anx': 25.0,
+        'text': [
+            'This song is psychotic, your anxiety rises by 25%'
+        ]
+    },
+    {
+        'Title': 'Oblivion',
+        'Artist': 'Grimes',
+        'anx': -10.0,
+        'text': [
+            'Ding! This was the perfect song! Your anxiety lowers by 10%.'
+        ]
+    },
+    {
+        'Title': 'In My Head',
+        'Artist': 'Sad Park',
+        'anx': -10.0,
+        'text': [
+            'Ding! This was the perfect song! Your anxiety lowers by 10%.'
+        ]
+    },
+    {
+        'Title': 'Telephone',
+        'Artist': 'Lady Gaga',
+        'anx': 5.0,
+        'text': [
+            'This song makes you miss your partner... your anxiety score rises by 15%.'
+        ]
+    },
+    {
+        'Title': 'Black Oak',
+        'Artist': 'Slaughter Beach Dog',
+        'anx': 5.0,
+        'text': [
+            'This song makes you miss your partner... your anxiety score rises by 15%.'
+        ]
+    },
+    {
+        'Title': 'Hey Man, Nice Shot',
+        'Artist': 'Filter',
+        'anx': 25.0,
+        'text': [
+            'This song is psychotic, your anxiety rises by 25%'
+        ]
+    }
+]
+
+INTRUSIVE_THOUGHTS = [
+    'Uh oh... Your anxiety is so high you triggered an intrusive thought! Today\'s edition has you thinking about...',
+    '...',
+    'You\'re gonna get in a car crash...',
+    'The food you\'ve eaten is rotten...',
+    'You\'re sick and you don\'t even know it. You\'re slowly dying from an unknown, uncurable disease...',
+    'The rain has pollution in it and it\'s poisoning your skin...',
+    'That person behind you... they\'re following you...',
+    'Nuclear holocaust is emminent...',
+    'An earthquake is emminent...',
+    'If a tsunami were to happen, everything I have would be washed away...'
+]
+
 class Question(): 
     '''
         A 'Question' is four parts,
@@ -20,6 +116,7 @@ class Question():
         self.question = question
         self.choices = choices
         self.modifiers = modifiers
+
 class Player():
     '''
         A 'Player' is four parts,
@@ -27,14 +124,13 @@ class Player():
         2. A starting stress meter of 0, float value
         3. A boolean 'eat' indicating whether player
         has had a meal
-        4. A boolean 'water' indicating if player
-        has had water
+        4. A starting intrusive thought chance value
     '''
     def __init__(self, name):
         self.name = name
         self.anx = 0.0
         self.eat = False
-        self.water = False
+        self.intrusive_thoughts = 0.0
 
     def adjust_anx(self, value):
         '''
@@ -44,14 +140,6 @@ class Player():
             'value' (float) - value to adjust anx
         '''
         self.anx += value
-
-        # If player has eaten or had water, anxiety score
-        # is reduced by a max of 20% collectively
-        if self.eat == True:
-            self.anx -= 15.0
-
-        if self.water == True:
-            self.anx -= 5    
 
         # Conditional to prevent value overflow
         if self.anx > 100.0:
@@ -63,26 +151,36 @@ class Player():
     
     def adjust_eat(self, value):
         '''
-            Adjusts 'eat' boolean value
+            Adjusts 'eat' boolean value. If self.eat == False and
+            value == True, reduce anxiety by 15%
 
             Inputs:
             'value' (boolean) - value to adjust eat
         '''
+        if self.eat == False and value == True:
+            self.anx -= 15
+
         self.eat = value
 
-    def adjust_water(self, value):
+    def adjust_intrusive_thoughts(self, value):
         '''
-            Adjusts 'water' boolean value
+            Adjusts 'intrusive_thoughts' meter
+        '''
 
-            Inputs:
-            'value' (boolean) - value to adjust water
-        '''
-        self.water = value
+        self.intrusive_thoughts += value
+
+        # Prevents value overflow
+        if self.intrusive_thoughts > 1.0:
+            self.intrusive_thoughts = 1.0
+
+        # Prevents value underflow
+        if self.intrusive_thoughts < 0.0:
+            self.intrusive_thoughts = 0.0    
 
 def clear():
     ''' Clears text in console '''
     # Found on stackoverflow.com/questions/37071230
-    os.system('cls')
+    os.system('clear')
    
 def format_question(input_question):
     ''' 
@@ -266,9 +364,9 @@ def anxiety_meter(anxiety):
         'anxiety' (float) - Player's current anxiety score
     '''
     if anxiety > 0.0:
-        level = (anxiety/100) * 65      # Calculates percentage of progress bar filled 
+        level = (anxiety/100) * 61      # Calculates percentage of progress bar filled 
         fill = ('█' * int(level))       # Calculates how many '█' characters to add
-        empty = ('░' * (65 - len(fill)))# Calculates how many '░' characters to add
+        empty = ('░' * (61 - len(fill)))# Calculates how many '░' characters to add
         bar = fill + empty          # Forms complete progress bar string
         print('ANXIETY | ' + bar + ' | ' + str(anxiety) + '%')
 
@@ -315,7 +413,7 @@ def get_answer(answers):
         while answer not in 'abcd':
             # Cursor up one line, reprints and erases previous input prompt
             # Found on stackoverflow.com/questions/5290994/remove-and-replace-printed-items
-            print('', end='\r')        
+            print('\r', end='\r')        
             response = input('\tPlease input "a", "b", "c", or "d": ')    
             response = response.lower()    
             answer = response[0]
@@ -362,14 +460,95 @@ def get_chance(chance):
         'output' (boolean) - indicates wheter story point occurs or not based on 'gamble'
     '''
 
-    output = True                       # Return variable default
+    output = False                       # Return variable default
     gamble = random.uniform(0.01, 1.00) # Gets value to compare chance to 
 
     if chance > gamble:
-        output = False
+        output = True
     
     return output
 
+def pick_song(player, shuffle):
+    '''
+        Picks a song from static list of songs, adjusts player
+        stats based on selection
+        
+        Inputs:
+        'shuffle' (boolean) - determines whether songs are selected or shuffled.
+        If shuffle is True, the function picks out a random song.
+
+        player (class) - the player class to be updated
+    '''
+
+    if shuffle == True:
+        song = random.choice(SONG_LIST)
+    else:
+        # Prepares song list for format_text() function
+        idx = 1
+        song_list_print = ['Choose a song from your song library:\n']
+        for songs in SONG_LIST:
+            song_list_print.append(str(idx) + '. ' + songs['Title'] + ' by ' + songs['Artist'] + '\n')
+            idx += 1
+
+        # Formats and prints text
+        song_list = format_text(song_list_print)
+        for strings in song_list:
+            sprint(strings)
+
+        # Get input from user
+        choice = input('\n\tChoice: ')
+
+        # Input validation
+        while choice not in '12345678910':
+            print('\r', end='')
+            choice = input('Please enter a number between 1 and 10: ')
+
+        # Typecast string input to int
+        choice = int(choice)    
+
+        # Subtract 1 from input to get index of song in SONG_LIST
+        choice -= 1
+
+        song = SONG_LIST[choice]
+
+    # 
+    player.adjust_anx(song['anx'])
+
+    # Format and print text associated with song choice
+    output = format_text(song['text'])
+    for strings in output:
+        sprint(strings)
+        time.sleep(3)
+
+def probe_intrusive_thoughts(player):
+    '''
+        Tests to see whether player will be hit with intrusive thought based
+        on player.intrusive_thoughts score
+
+        Inputs:
+        'player' (class) - the Player class to be updated
+    '''
+
+    gamble = get_chance(player.intrusive_thoughts)
+
+    if gamble == True:
+        thought = random.randint(2, 9)  # Indexes 2-9 contain the thoughts
+
+        # Puts header text (indexes 0 and 1) in list with thought for formatting
+        text_to_format = [INTRUSIVE_THOUGHTS[0], INTRUSIVE_THOUGHTS[1], INTRUSIVE_THOUGHTS[thought]]
+        text_to_print = format_text(text_to_format)
+
+        player.adjust_anx(15)
+
+        for strings in text_to_print:
+            clear()
+            anxiety_meter(player.anx)
+            sprint(strings)
+            time.sleep(3)
+        
+        player.adjust_intrusive_thoughts(-1)  
+    else:
+        player.adjust_intrusive_thoughts(0.075)        
 
 def testing_printtest():
     testquestion_fouroptions = Question(

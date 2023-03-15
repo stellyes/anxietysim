@@ -2,33 +2,23 @@ import life
 import time
 import questions
 
-def start():
-    '''
-        Starts the 'day-in-the-life' simulator
-
-        Returns:
-        Player (class) - The player object that holds player 
-        stats for the game
-    '''
-    life.clear()
-    life.sprint('\n\tWelcome! Please put in the name of your character.\n')
-    time.sleep(1)
-    name = input('\tName: ')
-    player1 = life.Player(name)
-    life.clear()
-    life.sprint('\n\tNice to meet you "' + player1.name + '", let\'s get started!')
-    time.sleep(3)
-    return player1
-
 def main():
-    player = start()                # Initializes player class
-    question_list = questions.get() # Grabs all necessary functions to run the simulator
-    #win = False                     # Boolean flag to indicate whether player has the won game
+    life.clear()                    # Clear console output
+    life.sprint('\n\tWelcome! Please put in the name of your character.\n')
+    name = input('\tName: ')        # Prompts user for name
+    player = life.Player(name)      # Initializes player class
+    life.clear()
+    life.sprint('\n\tNice to meet you "' + player.name + '", let\'s get started!')
+    time.sleep(2)                   # Wait two seconds before continuing
+
+    # Grabs all necessary Questions to run the simulator
+    question_list = questions.get() 
 
     # Grabs first question, 'question' var will be updated as game continues
     question = question_list[0]     
 
-    while life.game_continue(player.anx):
+    # If player's anxiety score == 100 or player reaches last question, while loop will terminate
+    while life.game_continue(player.anx) or question['ID'] == 200:
         life.clear()                          # Clears console output
         life.anxiety_meter(player.anx)        # Prints anxiety meter
         out = life.format_question(question)  # Formats question for printing
@@ -40,9 +30,14 @@ def main():
         # Updates player stats, returns new question_id if 'chance' returns True
         question_id = life.update_player_stats(player, question.modifiers[stats_index], question_id) 
 
+        # If the shuffle attribute is present, have the player select a song
+        if 'shuffle' in question.modifiers[stats_index]:
+            life.clear()
+            life.anxiety_meter(player.anx)
+            life.pick_song(player, question.modifiers[stats_index]['shuffle'])
+
         # Prints any necessary story points for player
         if 'text' in question.modifiers[stats_index]:
-            life.clear()
             story_points = life.format_text(question.modifiers[stats_index]['text'])
 
             # Prints each story point, waits three seconds before ending or moving to next point
@@ -56,10 +51,18 @@ def main():
                     life.sprint(strings)
                 time.sleep(3)
 
+        # Tests if intrusive thought will occur, if it doesn't, add 7.5% to chance
+        life.probe_intrusive_thoughts(player)        
+
         question = question_list[question_id]   # Sets index for next question
 
+    if player.anx == 100.0:
+        life.sprint('\n\tHey, you\'ll get \'em next time! Tomorrow is a new day, ' + player.name + '...\n\n\tGame Over')    
+    else:
+        life.sprint('\n\tCongratulations, ' + player.name + '! You\'ve made it through the day ')
+
+    time.sleep(3)
+    life.clear()
         
 if __name__ == "__main__":
     main() 
-    
-
