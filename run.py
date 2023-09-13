@@ -54,7 +54,8 @@ def main():
         # Tests if intrusive thought will occur, if it doesn't, add 7.5% to chance
         life.probe_intrusive_thoughts(player)        
 
-        question = question_list[question_id]   # Sets index for next question
+        if question_list[question_id] != 200:
+            question = question_list[question_id]   # Sets index for next question
 
     if player.anx == 100.0:
         life.sprint('\n\tHey, you\'ll get \'em next time! Tomorrow is a new day, ' + player.name + '...\n\n\tGame Over')    

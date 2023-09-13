@@ -453,6 +453,26 @@ question113 = life.Question(
         {
             'ID': 115,
             'Answer': 'Ignore it, it\'s probably nothing'
+        },
+        {
+            'ID': 115,
+            'Answer': 'I should go figure out what that is'
+        }
+    ],
+    [
+        {
+            'anx': 15,
+            'text': [
+                'You can\'t shake the voices... You keep hearing them. Your anxiety rises by 15%'
+            ]
+        },
+        {
+            'anx': 5,
+            'text': [
+                'Oh...',
+                'It\'s that art installment with the talking trees...',
+                'Good lord that stressed you out, but at least you can have peace of mind. Your anxiety rises by 5%'
+            ]
         }
     ]
 )
@@ -491,7 +511,30 @@ question114 = life.Question(
 
 question115 = life.Question(
     115,
-    'Oh... '
+    'Oh... ',
+    [
+        {
+            'ID': 200,
+            'Answer': 'This test is over. One of these options'
+        },
+        {
+            'ID': 200,
+            'Answer': 'will pass you, the other will fail. Choose wisely.'
+        }
+    ],
+    [
+        {
+            'anx': 95,
+            'text': [
+                'WRONG! You died. Literally died. Your player got so anxious they died. How does that make you feel. Bad, I hope.'
+            ]
+        },
+        {
+            'text': [
+                'Nice! Narrowly avoided that one.'
+            ]
+        }
+    ]
 )
 
 def get():
@@ -502,5 +545,5 @@ def get():
                  question104, question105, question106, 
                  question107, question108, question109,
                  question110, question111, question112,
-                 question113, question114]
+                 question113, question114, question115]
     return questions
